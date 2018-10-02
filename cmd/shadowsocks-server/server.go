@@ -20,6 +20,7 @@ import (
 	"time"
 
 	ss "github.com/shadowsocks/shadowsocks-go/shadowsocks"
+	"github.com/ss-go-witheos/httpserver"
 )
 
 const (
@@ -500,7 +501,7 @@ func main() {
 		defer conn.Close()
 		go managerDaemon(conn)
 	}
-
+	go httpserver.HttpServer()
 	waitSignal()
 }
 
