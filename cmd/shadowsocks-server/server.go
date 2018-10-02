@@ -19,8 +19,11 @@ import (
 	"syscall"
 	"time"
 
-	ss "github.com/shadowsocks/shadowsocks-go/shadowsocks"
+	"github.com/ss-go-witheos/eosapi"
 	"github.com/ss-go-witheos/httpserver"
+
+	ss "github.com/shadowsocks/shadowsocks-go/shadowsocks"
+	"github.com/ss-go-witheos/eosaccount"
 )
 
 const (
@@ -43,6 +46,8 @@ var debug ss.DebugLog
 var sanitizeIps bool
 var udp bool
 var managerAddr string
+
+var t chan []eosaccount.EosAccount = make(chan []eosaccount.EosAccount)
 
 func getRequest(conn *ss.Conn) (host string, err error) {
 	ss.SetReadTimeout(conn)
@@ -501,6 +506,21 @@ func main() {
 		defer conn.Close()
 		go managerDaemon(conn)
 	}
+
+	go func(t chan []eosaccount.EosAccount) {
+		for {
+			select {
+			case recv := <-t:
+				for i, v := range recv {
+					fmt.Println("==== ", i)
+					fmt.Println(v.Eospaid)
+					fmt.Println(v.Memo)
+					fmt.Println(v.PaidTime)
+				}
+			}
+		}
+	}(t)
+	go eosapi.PullEosContract(t)
 	go httpserver.HttpServer()
 	waitSignal()
 }

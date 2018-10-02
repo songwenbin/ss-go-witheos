@@ -6,6 +6,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
+
+	"github.com/ss-go-witheos/eosaccount"
 )
 
 type TableRows struct {
@@ -63,8 +66,8 @@ func HTTPErrorTOJSON(error HTTPError) (string, *AppError) {
 
 func Post(url string, keyValues map[string]interface{}, bytes []byte) ([]byte, *AppError) {
 
-	fmt.Println("post keyValues: ", keyValues)
-	fmt.Println("post raw: " + string(bytes))
+	//fmt.Println("post keyValues: ", keyValues)
+	//fmt.Println("post raw: " + string(bytes))
 
 	var err error
 
@@ -76,7 +79,7 @@ func Post(url string, keyValues map[string]interface{}, bytes []byte) ([]byte, *
 		return nil, NewAppError(err, "error marshalling params", -1, nil)
 	}
 
-	fmt.Println(url)
+	//fmt.Println(url)
 	req, _ := http.NewRequest("POST", url, strings.NewReader(string(bytes)))
 
 	req.Header.Add("content-type", "application/json")
@@ -131,9 +134,9 @@ func ChainGetTableRows(scope string, code string, table string, toJSON bool, low
 		return nil, err
 	}
 
-	fmt.Println("****************")
-	fmt.Println(string(data))
-	fmt.Println("****************")
+	//fmt.Println("****************")
+	//fmt.Println(string(data))
+	//fmt.Println("****************")
 	tableRows := TableRows{}
 	errM := json.Unmarshal(data, &tableRows)
 
@@ -144,8 +147,7 @@ func ChainGetTableRows(scope string, code string, table string, toJSON bool, low
 	return &tableRows, nil
 }
 
-func GetContractMember(serverUrl string) {
-	fmt.Println("test")
+func GetContractMember(serverUrl string) []eosaccount.EosAccount {
 	tableRows, err := ChainGetTableRows("incomering1", "incomering1", "purchase", true, -1, -1, -1)
 
 	fmt.Println("err: ", err)
@@ -153,5 +155,35 @@ func GetContractMember(serverUrl string) {
 	if tableRows != nil {
 		fmt.Println("tableRows: ", *tableRows)
 		fmt.Println("nb tableRows rows: ", len(tableRows.Rows))
+	}
+
+	var result []eosaccount.EosAccount
+	for i, v := range tableRows.Rows {
+		fmt.Println("==== ", i)
+		/*
+			fmt.Println(v.Eospaid)
+			fmt.Println(v.Memo)
+			fmt.Println(v.Paid_time)
+			fmt.Println(v.Purchaser)
+		*/
+
+		result = append(result, eosaccount.EosAccount{
+			Purchaser: v.Purchaser,
+			Eospaid:   v.Eospaid,
+			PaidTime:  v.Paid_time,
+			Memo:      v.Memo,
+		})
+
+	}
+
+	return result
+}
+
+func PullEosContract(eosAccountChan chan<- []eosaccount.EosAccount) {
+	for {
+		select {
+		case <-time.After(5 * time.Second):
+			eosAccountChan <- GetContractMember("")
+		}
 	}
 }
