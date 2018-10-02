@@ -19,11 +19,11 @@ import (
 	"syscall"
 	"time"
 
+	ss "github.com/shadowsocks/shadowsocks-go/shadowsocks"
+
+	"github.com/ss-go-witheos/eosaccount"
 	"github.com/ss-go-witheos/eosapi"
 	"github.com/ss-go-witheos/httpserver"
-
-	ss "github.com/shadowsocks/shadowsocks-go/shadowsocks"
-	"github.com/ss-go-witheos/eosaccount"
 )
 
 const (
@@ -48,6 +48,7 @@ var udp bool
 var managerAddr string
 
 var t chan []eosaccount.EosAccount = make(chan []eosaccount.EosAccount)
+var account_manager *httpserver.AccountManager = httpserver.NewAccountManager()
 
 func getRequest(conn *ss.Conn) (host string, err error) {
 	ss.SetReadTimeout(conn)
@@ -511,17 +512,24 @@ func main() {
 		for {
 			select {
 			case recv := <-t:
-				for i, v := range recv {
-					fmt.Println("==== ", i)
+				for _, v := range recv {
 					fmt.Println(v.Eospaid)
 					fmt.Println(v.Memo)
 					fmt.Println(v.PaidTime)
+					if account_manager.Get(v.Memo) == nil {
+						account_manager.Add(v.Memo)
+						port, password := account_manager.GetPortAndPassword(v.Memo)
+						if port != "" && password != "" {
+							go run(port, password)
+						}
+					}
 				}
 			}
 		}
 	}(t)
 	go eosapi.PullEosContract(t)
 	go httpserver.HttpServer()
+
 	waitSignal()
 }
 
