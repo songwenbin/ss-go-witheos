@@ -1,4 +1,4 @@
-package eosaccount
+package eosapi
 
 type EosAccount struct {
 	Purchaser string `json:"purchaser"`

@@ -21,7 +21,6 @@ import (
 
 	ss "github.com/shadowsocks/shadowsocks-go/shadowsocks"
 
-	"github.com/ss-go-witheos/eosaccount"
 	"github.com/ss-go-witheos/eosapi"
 	"github.com/ss-go-witheos/httpserver"
 )
@@ -47,7 +46,7 @@ var sanitizeIps bool
 var udp bool
 var managerAddr string
 
-var t chan []eosaccount.EosAccount = make(chan []eosaccount.EosAccount)
+var t chan []eosapi.EosAccount = make(chan []eosapi.EosAccount)
 var account_manager *httpserver.AccountManager = httpserver.NewAccountManager()
 
 func getRequest(conn *ss.Conn) (host string, err error) {
@@ -508,7 +507,7 @@ func main() {
 		go managerDaemon(conn)
 	}
 
-	go func(t chan []eosaccount.EosAccount) {
+	go func(t chan []eosapi.EosAccount) {
 		for {
 			select {
 			case recv := <-t:

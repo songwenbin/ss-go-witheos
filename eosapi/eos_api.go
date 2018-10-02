@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/ss-go-witheos/eosaccount"
 )
 
 type TableRows struct {
@@ -147,7 +145,7 @@ func ChainGetTableRows(scope string, code string, table string, toJSON bool, low
 	return &tableRows, nil
 }
 
-func GetContractMember(serverUrl string) []eosaccount.EosAccount {
+func GetContractMember(serverUrl string) []EosAccount {
 	tableRows, err := ChainGetTableRows("incomering1", "incomering1", "purchase", true, -1, -1, -1)
 
 	fmt.Println("err: ", err)
@@ -157,7 +155,7 @@ func GetContractMember(serverUrl string) []eosaccount.EosAccount {
 		fmt.Println("nb tableRows rows: ", len(tableRows.Rows))
 	}
 
-	var result []eosaccount.EosAccount
+	var result []EosAccount
 	for i, v := range tableRows.Rows {
 		fmt.Println("==== ", i)
 		/*
@@ -167,7 +165,7 @@ func GetContractMember(serverUrl string) []eosaccount.EosAccount {
 			fmt.Println(v.Purchaser)
 		*/
 
-		result = append(result, eosaccount.EosAccount{
+		result = append(result, EosAccount{
 			Purchaser: v.Purchaser,
 			Eospaid:   v.Eospaid,
 			PaidTime:  v.Paid_time,
@@ -179,7 +177,7 @@ func GetContractMember(serverUrl string) []eosaccount.EosAccount {
 	return result
 }
 
-func PullEosContract(eosAccountChan chan<- []eosaccount.EosAccount) {
+func PullEosContract(eosAccountChan chan<- []EosAccount) {
 	for {
 		select {
 		case <-time.After(5 * time.Second):
