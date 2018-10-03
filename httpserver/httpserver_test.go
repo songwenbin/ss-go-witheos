@@ -144,3 +144,20 @@ func TestResultToClient(t *testing.T) {
 	t.Error("")
 
 }
+
+func TestTemp(t *testing.T) {
+
+	//sig := "{\"payload\":\"MTUzODU2MjE2OA\",\"protected\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IkR0eVJTaG5pUGJrdVh1RW5Obm1vNzRFR2RISERGNEpKMW9yZXNkcFBhYnlWIn0\",\"signature\":\"CxU7nRUGuwIOsmNr9hUPXKuJJgTc5tMcYQqnVrND7DaCNnU0rL5vySipoMH4HLCpW581W2aGXo3QB4o8c7QEFfKLGdR8bWWZdi7Q75wzNI4N9qRWsD82S2noWI6xuh9Dlh8nGUAC_ZfpnHqg3aMx6PWCPpYrxxdP1tWwpr2yAprBhMcsEADzINiWvUkyneFkuljt-UywU1U3Cgb5_jPj-IKcWC8QaaQkUHEcqpu8qzsWhKqKITdBvDr6fyIZ4ENzk0Gr0Bni7S9bXcFDvzaqwhOrcw2vnNXRoiq58illbA1C7DvoTz8_7BMCeVcsrCqE31HEWsA6Em5rAIQEn40Vkg\"}"
+	//publc_key := "{\"kid\":\"DtyRShniPbkuXuEnNnmo74EGdHHDF4JJ1oresdpPabyV\",\"e\":\"AQAB\",\"kty\":\"RSA\",\"n\":\"nxuARX905_3pDATluPJB5NMalvPgqc9FImgDQXZ3scpWiumVYC2disk2qSlnH8ZgBnTXvkQUyNKxfmMum9qkgHJXwKtxVoKdIVrQPy3hiC9U0tFGSvgGNeFp5qaEsm5SK8R7Y2kWWz4VEl9n0TTdmO-0D1P4co-hlk0eo4JLU95aJxpwuNafDoZDm4MZM04D4kh3ZxC_mXklT8WRQ8E-bOnkOYCfqQiniLXIHQvV7eSVgHYokhcnhK9GYaOe73gNwEdXuBQAabZsvBAasaWaPMrkfGOef9RFPt6wHDpgmpJBgSJRuAI19f7hAlJI5DeUT0TwzgU6xVfOC08sQlYVjQ\"}"
+
+	publc_key := "{\"kty\":\"RSA\",\"kid\":\"test\",\"n\":\"1O2MblLzriTX06nsrcLy6diuEHl4s3eswSzAigyf7-zKFOo-ttbNeQTQ29X2iHSeLdYbHZc_l-olyPWOhpQSVDY9ikkluml6W_tkOgSwcPZNvXOfTXWSw7m_oJmLU1FBZJhKeMorHF-62wLC5xYMe7OmXT_SOiEzP5VvVJuFmt0czexUO9wB1gSTxBvBFUbhkb__OoHL2ArSp56acfkhZJzIRCz19JQSXBn9mMgSJPOO1GjVwrhVWsddrVkaZ4ZzchM6E_wbtSQza0JUWIIX6HLOgDMuvnikAxf3j9QWtO6uGHxVdddUtWxRnlruVmQ0gZ_mkKTxK-yUCIs4qwEBUw\",\"e\":\"AQAB\"}"
+	sig := "{\"payload\":\"MTUzODU2OTEwNg\",\"protected\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9\",\"signature\":\"YHftpfx2UvroU-UiHm1W37AMgpIov7mXS2dPun0dNl6cu6hHzWhicGu9-z_aF3cyGXdamJbenU7zEsOkmDE_UTCyUI5J0AXd9RE3AFKSmrkltJ7UD3P640ejd3qBKPGpoakGAs1wa2X0v896gIWnq4gCDMaaGDN6FQ1Z6Ilgry6m0TsNz_Xwcm6rZEAw2tMFgIssjg-GRWnS7kogYBhtTIgwxg3G0Qxoc_-NY_VVMij8m7nU2Lu1CMyp594jPr3lUAXzY_2kkE9fccDKfXONGsdDEU1r8J3FK7B0fpfKK7QlHxeug2G6QyGCkxvyOp5DAzCd5-dVtC43spzyydmVSg\"}"
+	var se SafeEncrypt
+	se.SetPublicKey(publc_key)
+	//result, err := JWS_Verify(&se, string(ret))
+	result, err := JWS_Verify(&se, sig)
+	if err != nil {
+		fmt.Println("ok", err.Error())
+	}
+	t.Error(result)
+}

@@ -110,13 +110,14 @@ func JWS_Sign(se *SafeEncrypt, content string) (string, error) {
 		return "", err
 	}
 
-	return object.CompactSerialize()
+	return object.FullSerialize(), nil
 }
 
 func JWS_Verify(se *SafeEncrypt, payload string) (string, error) {
 	object, err := b.ParseSigned(payload)
 	if err != nil {
 		fmt.Println(err)
+		fmt.Println("....")
 		return "", err
 	}
 
