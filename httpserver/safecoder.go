@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/eoscanada/eos-go/btcsuite/btcutil/base58"
 	"gopkg.in/square/go-jose.v2"
 	b "gopkg.in/square/go-jose.v2"
 )
@@ -204,4 +205,14 @@ func KeygenEnc(bits int) (crypto.PublicKey, crypto.PrivateKey, error) {
 	}
 	key, err := rsa.GenerateKey(rand.Reader, bits)
 	return key.Public(), key, err
+}
+
+func Base58Encoder(payload []byte) string {
+	encoded := base58.Encode(payload)
+	return encoded
+}
+
+func Base58Decoder(content string) []byte {
+	decoded := base58.Decode(content)
+	return decoded
 }
