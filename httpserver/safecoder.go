@@ -72,19 +72,33 @@ func JWS_Sign(se *SafeEncrypt, content string) (string, error) {
 	signer, err := b.NewSigner(b.SigningKey{Algorithm: b.PS512, Key: se.PrivateKey}, nil)
 	if err != nil {
 		fmt.Println(err)
+		return "", err
 	}
 
 	c := []byte(content)
 	object, err := signer.Sign(c)
 	if err != nil {
 		fmt.Println(err)
+		return "", err
 	}
 
 	return object.CompactSerialize()
 }
 
-func JWS_Verify() {
+func JWS_Verify(se *SafeEncrypt, payload string) (string, error) {
+	object, err := b.ParseSigned(payload)
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
 
+	output, err := object.Verify(se.PublicKey)
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+
+	return string(output), nil
 }
 
 func SHA256(content string) []byte {

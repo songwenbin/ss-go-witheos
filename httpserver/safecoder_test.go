@@ -34,22 +34,35 @@ func TestInputParam(t *testing.T) {
 
 func TestEnDecrypt(t *testing.T) {
 	pub, pri := GenerateEncKey()
-	//pubs := jose.JSONWebKey{Key: nil, KeyID: "test1", Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
 
 	var se *SafeEncrypt = &SafeEncrypt{}
-
 	se.SetPrivateKey(pri)
 	se.SetPublicKey(pub)
 
 	result := JWE_Encrypt(se, "test")
 	actual := JWE_Decrypt(se, result)
-	fmt.Println(result)
+	fmt.Println("========================")
 	fmt.Println(actual)
-	t.Error("test")
+
 	if actual != "test" {
-		fmt.Println(result)
-		fmt.Println(actual)
 		t.Error("test")
+	}
+
+	sign_result, err := JWS_Sign(se, "test2")
+	fmt.Println(sign_result)
+	if err != nil {
+		fmt.Println(err)
+	}
+	sign_actual, err := JWS_Verify(se, sign_result)
+	fmt.Println(sign_actual)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if sign_actual != "test2" {
+		fmt.Println("========================")
+		fmt.Println(sign_actual)
+		t.Error("test2")
 	}
 }
 
@@ -57,5 +70,6 @@ func TestEncrypt(t *testing.T) {
 	fmt.Println("ok1")
 	t.Log("sdfdsfsd")
 	fmt.Print("111")
+
 	//t.Error("test")
 }
