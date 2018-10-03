@@ -170,15 +170,15 @@ func GenerateSigKey() (string, string) {
 	*/
 	priv := jose.JSONWebKey{Key: privKey, KeyID: "test", Algorithm: string(jose.RS256), Use: "sig"}
 	pub := jose.JSONWebKey{Key: pubKey, KeyID: "test", Algorithm: string(jose.RS256), Use: "sig"}
-	fmt.Println(priv.Key)
-	fmt.Println(pub.Key)
+	//fmt.Println(priv.Key)
+	//fmt.Println(pub.Key)
 	if priv.IsPublic() || !pub.IsPublic() || !priv.Valid() || !pub.Valid() {
 		//app.Fatalf("invalid keys were generated")
 	}
 	privJS, _ := priv.MarshalJSON()
 	pubJS, _ := pub.MarshalJSON()
-	fmt.Println(string(privJS))
-	fmt.Println(string(pubJS))
+	//fmt.Println(string(privJS))
+	//fmt.Println(string(pubJS))
 
 	return string(pubJS), string(privJS)
 }
