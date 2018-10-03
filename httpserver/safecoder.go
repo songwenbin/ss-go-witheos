@@ -24,7 +24,6 @@ type PayloadToServer struct {
 }
 
 func (se *SafeEncrypt) SetPrivateKey(jsonformat string) {
-	// 从JSON格式还原到二进制
 	privateKey := jose.JSONWebKey{}
 	privateKey.UnmarshalJSON([]byte(jsonformat))
 
@@ -33,9 +32,37 @@ func (se *SafeEncrypt) SetPrivateKey(jsonformat string) {
 
 func (se *SafeEncrypt) SetPublicKey(jsonformat string) {
 	publicKey := jose.JSONWebKey{}
-	publicKey.UnmarshalJSON([]byte(jsonformat))
+	err := publicKey.UnmarshalJSON([]byte(jsonformat))
+	if err != nil {
+		fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+		fmt.Println(err)
+	}
 
 	se.PublicKey = publicKey.Key.(*rsa.PublicKey)
+}
+
+func (se *SafeEncrypt) GetPrivateKey() string {
+	priv := jose.JSONWebKey{Key: se.PrivateKey, KeyID: "test", Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
+	privJS, _ := priv.MarshalJSON()
+	return string(privJS)
+}
+
+func (se *SafeEncrypt) GetPublicKey() string {
+	pub := jose.JSONWebKey{Key: se.PublicKey, KeyID: "test", Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
+	pubJS, _ := pub.MarshalJSON()
+	return string(pubJS)
+}
+
+func (se *SafeEncrypt) GetSigPrivateKey() string {
+	priv := jose.JSONWebKey{Key: se.PrivateKey, KeyID: "test", Algorithm: string(jose.RS256), Use: "sig"}
+	privJS, _ := priv.MarshalJSON()
+	return string(privJS)
+}
+
+func (se *SafeEncrypt) GetSigPublicKey() string {
+	pub := jose.JSONWebKey{Key: se.PublicKey, KeyID: "test", Algorithm: string(jose.RS256), Use: "sig"}
+	pubJS, _ := pub.MarshalJSON()
+	return string(pubJS)
 }
 
 func JWE_Encrypt(se *SafeEncrypt, content string) string {
@@ -69,7 +96,7 @@ func JWE_Decrypt(se *SafeEncrypt, content string) string {
 }
 
 func JWS_Sign(se *SafeEncrypt, content string) (string, error) {
-	signer, err := b.NewSigner(b.SigningKey{Algorithm: b.PS512, Key: se.PrivateKey}, nil)
+	signer, err := b.NewSigner(b.SigningKey{Algorithm: b.RS256, Key: se.PrivateKey}, nil)
 	if err != nil {
 		fmt.Println(err)
 		return "", err
@@ -121,8 +148,8 @@ func GenerateEncKey() (string, string) {
 	if priv.IsPublic() || !pub.IsPublic() || !priv.Valid() || !pub.Valid() {
 		//app.Fatalf("invalid keys were generated")
 	}
-	fmt.Println(pub.Key)
-	fmt.Println(priv.Key)
+	//fmt.Println(pub.Key)
+	//fmt.Println(priv.Key)
 	privJS, _ := priv.MarshalJSON()
 	pubJS, _ := pub.MarshalJSON()
 	//fmt.Println(string(privJS))
