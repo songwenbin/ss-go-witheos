@@ -15,6 +15,16 @@ type PublicKey struct {
 	N   string `json:"n"`
 }
 
+type PublicKeyForLogin struct {
+	Kid string `json:"kid"`
+	E   string `json:"e"`
+	Kty string `json:"kty"`
+	N   string `json:"n"`
+	Use string `json:"use"`
+	Alg string `json:"alg"`
+	Enc string `json:"enc"`
+}
+
 type TsSignature struct {
 	Payload   string `json:"payload"`
 	Signature string `json:"signature"`
@@ -34,14 +44,15 @@ type PricePayload struct {
 }
 
 type LoginPayload struct {
-	Key       string `json:"key"`
-	Signature string `json:"signature"`
-	Request   string `json:"request"`
+	Key       PublicKeyForLogin `json:"key"`
+	Signature TsSignature       `json:"signature"`
+	Request   string            `json:"request"`
 }
 
 type LoginResponse struct {
-	SScert []AccountResponse `json:"ss_cert"`
-	Ts     string            `json:"ts"`
+	SScert         []AccountResponse `json:"ss_cert"`
+	Ts             int64             `json:"ts"`
+	SignatureStrTs TsSignature       `json:"signature_str_ts"`
 }
 
 type AccountResponse struct {
@@ -99,11 +110,26 @@ func ResultToClientForPrice() string {
 
 func DecryptInputParamForLogin(se *SafeEncrypt, content string) string {
 	result := JWE_Decrypt(se, content)
-	fmt.Println(result)
 	return result
 }
 
 func ResponseForLogin(client *SafeEncrypt, server *SafeEncrypt, res LoginPayload) string {
+
+	// 2 signed_payload = JWS(ts_server, server_private_key)
+	ts := time.Now().Unix()
+	signed, err := JWS_Sign(se, string(ts))
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	var sign TsSignature
+	err = json.Unmarshal([]byte(signed), &sign)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	//1 service_list = [{"type":"s", "address":"1.1.1.1", "port":"13345", "key":"key134555", "method":"hello"},{"type":"d", "address":"1.1.1.1", "port":"13345", "key":"key134555", "method":"world"}]
+	//3 response_of_server_signed = {"ss_cert": ss_cert_list, "ts": ts_server, "signature_str_ts": signed_payload})
 	var service_list LoginResponse = LoginResponse{
 		SScert: []AccountResponse{AccountResponse{
 			Type:    "s",
@@ -118,57 +144,60 @@ func ResponseForLogin(client *SafeEncrypt, server *SafeEncrypt, res LoginPayload
 			Key:     "key13455",
 			Method:  "hello",
 		}},
-		Ts: strconv.FormatInt(time.Now().Unix(), 10),
+		Ts:             ts,
+		SignatureStrTs: sign,
 	}
-
 	servicelist_json, err := json.Marshal(&service_list)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 	fmt.Println(string(servicelist_json))
 
-	//2 response_of_server_signed = JWS(service_list, private_key_server)
-	response_of_server_signed, err := JWS_Sign(server, string(servicelist_json))
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	//4 response_http = JWE(response_of_server_signed, public_key_client)
 
-	fmt.Println(response_of_server_signed)
-	//3  response_http = JWE(response_of_server_signed, public_key_client)
-
-	client.SetPublicKey(res.Key)
-	response_http := JWE_Encrypt(client, response_of_server_signed)
+	response_http := JWE_Encrypt(client, string(servicelist_json))
 	fmt.Println(response_http)
 	return response_http
 }
 
 func handlePrice(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")             //允许访问所有域
-	w.Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
+	// 解决跨域的参数
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("content-type", "application/json")
+
 	response := ResultToClientForPrice()
 	fmt.Fprintf(w, response)
 }
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")             //允许访问所有域
-	w.Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
+	// 解决跨域的参数
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("content-type", "application/json")
 
 	r.ParseForm()
 	input := r.Form["code"][0]
 
+	fmt.Println(input)
 	result := DecryptInputParamForLogin(se, input)
+	fmt.Println("============")
+	fmt.Println(result)
 
 	var res LoginPayload
 	if err := json.Unmarshal([]byte(result), &res); err != nil {
 		fmt.Println("数据无法解析")
 	}
 
+	keyjson, _ := json.Marshal(res.Key)
+	fmt.Println(string(keyjson))
 	var client SafeEncrypt
-	client.SetPublicKey(res.Key)
-	timestamp, _ := JWS_Verify(&client, res.Signature)
+	client.SetPublicKey(string(keyjson))
+
+	signjson, _ := json.Marshal(res.Signature)
+	timestamp, _ := JWS_Verify(&client, string(signjson))
 	fmt.Println(timestamp)
+	fmt.Println("sfdsfsdfsdfdsfsdfsdfs")
 
 	fmt.Fprintf(w, ResponseForLogin(&client, se, res))
 }
