@@ -8,16 +8,29 @@ import (
 	"time"
 )
 
+type PublicKey struct {
+	Kid string `json:"kid"`
+	E   string `json:"e"`
+	Kty string `json:"kty"`
+	N   string `json:"n"`
+}
+
+type TsSignature struct {
+	Payload   string `json:"payload"`
+	Signature string `json:"signature"`
+	Protected string `json:"protected"`
+}
+
 type PriceResponse struct {
 	Content     PricePayload `json:"content"`
-	TsSignature string       `json:"ts_signature"`
+	TsSignature TsSignature  `json:"ts_signature"`
 }
 
 type PricePayload struct {
-	ContractAddress string `json:"ContractAddress"`
-	Price           int    `json:"Price"`
-	PublicKey       string `json:"PublicKey"`
-	Ts              string `json:"ts"`
+	ContractAddress string    `json:"ContractAddress"`
+	Price           int       `json:"Price"`
+	PublicKey       PublicKey `json:"PublicKey"`
+	Ts              int64     `json:"ts"`
 }
 
 type LoginPayload struct {
@@ -45,8 +58,6 @@ func init() {
 	pub, pri := GenerateSigKey()
 	se.SetPrivateKey(pri)
 	se.SetPublicKey(pub)
-	//se.SetPublicKey("{\"kid\": \"server_kid\", \"use\":\"enc\", \"e\": \"AQAB\", \"kty\": \"RSA\", \"n\": \"nxuARX905_3pDATluPJB5NMalvPgqc9FImgDQXZ3scpWiumVYC2disk2qSlnH8ZgBnTXvkQUyNKxfmMum9qkgHJXwKtxVoKdIVrQPy3hiC9U0tFGSvgGNeFp5qaEsm5SK8R7Y2kWWz4VEl9n0TTdmO-0D1P4co-hlk0eo4JLU95aJxpwuNafDoZDm4MZM04D4kh3ZxC_mXklT8WRQ8E-bOnkOYCfqQiniLXIHQvV7eSVgHYokhcnhK9GYaOe73gNwEdXuBQAabZsvBAasaWaPMrkfGOef9RFPt6wHDpgmpJBgSJRuAI19f7hAlJI5DeUT0TwzgU6xVfOC08sQlYVjQ\"}")
-	fmt.Println(pub)
 }
 
 func ResultToClientForPrice() string {
@@ -54,16 +65,28 @@ func ResultToClientForPrice() string {
 	current_str := strconv.FormatInt(current, 10)
 	signed, _ := JWS_Sign(se, current_str)
 
+	var sign TsSignature
+	err := json.Unmarshal([]byte(signed), &sign)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	var pubkey PublicKey
+	err = json.Unmarshal([]byte(se.GetPublicKey()), &pubkey)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	payload := PricePayload{
 		ContractAddress: "0xdeadbeef",
 		Price:           1,
-		PublicKey:       se.GetSigPublicKey(),
-		Ts:              current_str,
+		PublicKey:       pubkey,
+		Ts:              current,
 	}
 
 	response := &PriceResponse{
 		Content:     payload,
-		TsSignature: signed,
+		TsSignature: sign,
 	}
 
 	result, err := json.Marshal(response)

@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 
@@ -43,25 +44,29 @@ func (se *SafeEncrypt) SetPublicKey(jsonformat string) {
 }
 
 func (se *SafeEncrypt) GetPrivateKey() string {
-	priv := jose.JSONWebKey{Key: se.PrivateKey, KeyID: "test", Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
+	kid := base64.StdEncoding.EncodeToString([]byte("serverid"))
+	priv := jose.JSONWebKey{Key: se.PrivateKey, KeyID: kid, Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
 	privJS, _ := priv.MarshalJSON()
 	return string(privJS)
 }
 
 func (se *SafeEncrypt) GetPublicKey() string {
-	pub := jose.JSONWebKey{Key: se.PublicKey, KeyID: "test", Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
+	kid := base64.StdEncoding.EncodeToString([]byte("serverid"))
+	pub := jose.JSONWebKey{Key: se.PublicKey, KeyID: kid, Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
 	pubJS, _ := pub.MarshalJSON()
 	return string(pubJS)
 }
 
 func (se *SafeEncrypt) GetSigPrivateKey() string {
-	priv := jose.JSONWebKey{Key: se.PrivateKey, KeyID: "test", Algorithm: string(jose.RS256), Use: "sig"}
+	kid := base64.StdEncoding.EncodeToString([]byte("serverid"))
+	priv := jose.JSONWebKey{Key: se.PrivateKey, KeyID: kid, Algorithm: string(jose.RS256), Use: "sig"}
 	privJS, _ := priv.MarshalJSON()
 	return string(privJS)
 }
 
 func (se *SafeEncrypt) GetSigPublicKey() string {
-	pub := jose.JSONWebKey{Key: se.PublicKey, KeyID: "test", Algorithm: string(jose.RS256), Use: "sig"}
+	kid := base64.StdEncoding.EncodeToString([]byte("serverid"))
+	pub := jose.JSONWebKey{Key: se.PublicKey, KeyID: kid, Algorithm: string(jose.RS256), Use: "sig"}
 	pubJS, _ := pub.MarshalJSON()
 	return string(pubJS)
 }
@@ -97,8 +102,11 @@ func JWE_Decrypt(se *SafeEncrypt, content string) string {
 }
 
 func JWS_Sign(se *SafeEncrypt, content string) (string, error) {
-	signer, err := b.NewSigner(b.SigningKey{Algorithm: b.RS256, Key: se.PrivateKey}, nil)
+	kid := base64.StdEncoding.EncodeToString([]byte("serverid"))
+	pri := jose.JSONWebKey{Key: se.PrivateKey, KeyID: kid, Algorithm: string(jose.RS256), Use: "sig"}
+	signer, err := b.NewSigner(b.SigningKey{Algorithm: b.RS256, Key: pri}, nil)
 	if err != nil {
+		fmt.Println("ss")
 		fmt.Println(err)
 		return "", err
 	}
@@ -145,8 +153,9 @@ func GenerateEncKey() (string, string) {
 		rand.Read(b)
 		kid := base32.StdEncoding.EncodeToString(b)
 	*/
-	priv := jose.JSONWebKey{Key: privKey, KeyID: "test", Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
-	pub := jose.JSONWebKey{Key: pubKey, KeyID: "test", Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
+	kid := base64.StdEncoding.EncodeToString([]byte("serverid"))
+	priv := jose.JSONWebKey{Key: privKey, KeyID: kid, Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
+	pub := jose.JSONWebKey{Key: pubKey, KeyID: kid, Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
 	if priv.IsPublic() || !pub.IsPublic() || !priv.Valid() || !pub.Valid() {
 		//app.Fatalf("invalid keys were generated")
 	}
@@ -165,13 +174,11 @@ func GenerateSigKey() (string, string) {
 	var privKey crypto.PublicKey
 	var pubKey crypto.PrivateKey
 	pubKey, privKey, err = KeygenSig(2048)
-	/*
-		b := make([]byte, 5)
-		rand.Read(b)
-		kid := base32.StdEncoding.EncodeToString(b)
-	*/
-	priv := jose.JSONWebKey{Key: privKey, KeyID: "test", Algorithm: string(jose.RS256), Use: "sig"}
-	pub := jose.JSONWebKey{Key: pubKey, KeyID: "test", Algorithm: string(jose.RS256), Use: "sig"}
+	//b := make([]byte, 5)
+	//rand.Read(b)
+	kid := base64.StdEncoding.EncodeToString([]byte("serverid"))
+	priv := jose.JSONWebKey{Key: privKey, KeyID: kid, Algorithm: string(jose.RS256), Use: "sig"}
+	pub := jose.JSONWebKey{Key: pubKey, KeyID: kid, Algorithm: string(jose.RS256), Use: "sig"}
 	//fmt.Println(priv.Key)
 	//fmt.Println(pub.Key)
 	if priv.IsPublic() || !pub.IsPublic() || !priv.Valid() || !pub.Valid() {

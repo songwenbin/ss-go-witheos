@@ -145,6 +145,64 @@ func TestResultToClient(t *testing.T) {
 
 }
 
+type PriceResponses struct {
+	Content     Content     `json:"content"`
+	TsSignature TsSignature `json:"ts_signature"`
+}
+
+type Content struct {
+	ContractAddress string    `json:"ContractAddress"`
+	Price           string    `json:"Price"`
+	PublicKey       PublicKey `json:"PublicKey"`
+	Ts              int       `json:"ts"`
+}
+
+type PublicKey struct {
+	Kid string `json:"kid"`
+	E   string `json:"e"`
+	Kty string `json:"kty"`
+	N   string `json:"n"`
+}
+
+type TsSignature struct {
+	Payload   string `json:"payload"`
+	Signature string `json:"signature"`
+	Protected string `json:"protected"`
+}
+
+func TestPrice(t *testing.T) {
+	response, err := http.Get("http://127.0.0.1:8080/price.json")
+	if err != nil {
+
+	}
+
+	body, _ := ioutil.ReadAll(response.Body)
+	fmt.Println(string(body))
+	fmt.Println("==============")
+	var res PriceResponses
+	if err := json.Unmarshal(body, &res); err != nil {
+		t.Error("数据无法解析")
+	}
+
+	fmt.Println(res.TsSignature.Payload)
+	var server SafeEncrypt
+	pub, _ := json.Marshal(res.Content.PublicKey)
+	server.SetPublicKey(string(pub))
+	var a string
+	a += res.TsSignature.Protected
+	a += "."
+	a += res.TsSignature.Payload
+	a += "."
+	a += res.TsSignature.Signature
+	fmt.Println(a)
+	actual, _ := JWS_Verify(&server, a)
+	fmt.Println(actual)
+	fmt.Println("=")
+	fmt.Println(res.Content.Ts)
+
+	t.Error("")
+}
+
 func TestTemp(t *testing.T) {
 
 	//sig := "{\"payload\":\"MTUzODU2MjE2OA\",\"protected\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IkR0eVJTaG5pUGJrdVh1RW5Obm1vNzRFR2RISERGNEpKMW9yZXNkcFBhYnlWIn0\",\"signature\":\"CxU7nRUGuwIOsmNr9hUPXKuJJgTc5tMcYQqnVrND7DaCNnU0rL5vySipoMH4HLCpW581W2aGXo3QB4o8c7QEFfKLGdR8bWWZdi7Q75wzNI4N9qRWsD82S2noWI6xuh9Dlh8nGUAC_ZfpnHqg3aMx6PWCPpYrxxdP1tWwpr2yAprBhMcsEADzINiWvUkyneFkuljt-UywU1U3Cgb5_jPj-IKcWC8QaaQkUHEcqpu8qzsWhKqKITdBvDr6fyIZ4ENzk0Gr0Bni7S9bXcFDvzaqwhOrcw2vnNXRoiq58illbA1C7DvoTz8_7BMCeVcsrCqE31HEWsA6Em5rAIQEn40Vkg\"}"
