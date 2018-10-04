@@ -79,7 +79,7 @@ func JWE_Encrypt(se *SafeEncrypt, content string) string {
 	//encrypter, err := b.NewEncrypter(b.A256CBC_HS512, b.Recipient{Algorithm: b.RSA_OAEP, Key: se.PublicKey}, nil)
 	opt := b.EncrypterOptions{}
 	opt.WithType("JWE")
-	encrypter, err := b.NewEncrypter(b.A256CBC_HS512, b.Recipient{Algorithm: b.RSA_OAEP, Key: se.PublicKey}, &opt)
+	encrypter, err := b.NewEncrypter(b.A256GCM, b.Recipient{Algorithm: b.RSA_OAEP, Key: se.PublicKey}, &opt)
 
 	if err != nil {
 		fmt.Println(err)
