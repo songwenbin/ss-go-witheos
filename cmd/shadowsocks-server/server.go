@@ -47,7 +47,6 @@ var udp bool
 var managerAddr string
 
 var t chan []eosapi.EosAccount = make(chan []eosapi.EosAccount)
-var account_manager *httpserver.AccountManager = httpserver.NewAccountManager()
 
 func getRequest(conn *ss.Conn) (host string, err error) {
 	ss.SetReadTimeout(conn)
@@ -507,28 +506,28 @@ func main() {
 		go managerDaemon(conn)
 	}
 
-	/*
-		go func(t chan []eosapi.EosAccount) {
-			for {
-				select {
-				case recv := <-t:
-					for _, v := range recv {
-						fmt.Println(v.Eospaid)
-						fmt.Println(v.Memo)
-						fmt.Println(v.PaidTime)
-						if account_manager.Get(v.Memo) == nil {
-							account_manager.Add(v.Memo)
-							port, password := account_manager.GetPortAndPassword(v.Memo)
-							if port != "" && password != "" {
-								go run(port, password)
-							}
-						}
+	go func(t chan []eosapi.EosAccount) {
+		for {
+			recv, ok := <-t
+			if !ok {
+				break
+			}
+			for _, v := range recv {
+				fmt.Println(v.Eospaid)
+				fmt.Println(v.Memo)
+				fmt.Println(v.PaidTime)
+				account_manager := httpserver.AccountMangerFactory()
+				if account_manager.Get(v.Memo) == nil {
+					account_manager.Add(v.Memo)
+					port, password := account_manager.GetPortAndPassword(v.Memo)
+					if port != "" && password != "" {
+						go run(port, password)
 					}
 				}
 			}
-		}(t)
-		go eosapi.PullEosContract(t)
-	*/
+		}
+	}(t)
+	go eosapi.PullEosContract(t)
 	go httpserver.HttpServer()
 
 	waitSignal()

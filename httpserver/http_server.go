@@ -220,6 +220,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("sfdsfsdfsdfdsfsdfsdfs")
 
 	memo := Base58Encoder(SHA256(string(SHA256(payload.Key.N))))
+	fmt.Println("用户的key是:", memo)
 	account := FindAccountInfo(memo)
 	resp := ResponseForLogin(client, se, account)
 	fmt.Fprintf(w, resp)
