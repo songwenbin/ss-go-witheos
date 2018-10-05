@@ -17,6 +17,17 @@ type AccountInfo struct {
 	port    string
 	key     string
 	methods string
+	atype   string
+}
+
+var accountManager *AccountManager = NewAccountManager()
+
+func init() {
+	accountManager.Add("ok")
+}
+
+func AccountMangerFactory() *AccountManager {
+	return accountManager
 }
 
 func NewAccountManager() *AccountManager {
@@ -59,6 +70,17 @@ func (am *AccountManager) Get(publickey string) *AccountInfo {
 	} else {
 		am.Unlock()
 		return value
+	}
+}
+
+func (am *AccountManager) GetAccountDetail(memo string) (string, string, string, string, string) {
+	am.Lock()
+	value, exists := am.mapper[memo]
+	am.Unlock()
+	if exists == false {
+		return "", "", "", "", ""
+	} else {
+		return value.ip, value.port, value.key, value.methods, value.atype
 	}
 }
 
