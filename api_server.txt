@@ -1,0 +1,140 @@
+all sender need to sign message with it't own private key.
+That means sender need to place it's payload in JWS format, sigature algo is RS256, kid should be result of twice hash256 on base64 encoding on public key
+
+Send must encrypt whole data in JWE format if it already known receiver's public key.
+This means sender need to place a JWS format in a JWE format
+
+If payload is a key, the key must be represented in JWK format
+
+JWE: https://tools.ietf.org/html/rfc7516
+JWS: https://tools.ietf.org/html/rfc7515
+JWK: https://tools.ietf.org/html/rfc7517
+A public key in JWK format is following
+{ "kid": "HareBAjopJi7GabM5HEX1VWsTHEmu8cFfAQFfSpbMsvT", "use": "enc", "alg": "RSA-OAEP", "enc": "A256CBC-HS512", "e": "AQAB", "kty": "RSA", "n": "yfTdA3PJzyo2LT899lspEA8QESzDDMO-rRu7VtIKCSgBliCCI4etuVHU--2h3JXFHaNttfFTm2uA1ps1G86q90tvTol7MBqSZgD51dlBP_V5vDtdkmi_sS38Szfz_Qu6CS2-JxDmLdrBPJAXJjOW13Sz6e-cjT3TCsmV3n4zqyYbLSHOBdLpLAcH6JWtqsJE8bED68C5EZzfBtWoOXWtsNJgsGIQ2hugdh-VAm4lCPaSIOdQKGczfvSRFcsTMCKox9norysq3rfKqh0b_UBfcBDhFtFnVrCFGVtsbKV9OIf404J_QOpH8pjeyAVcocBN4TzJilrOfiDlcSvaztkaEQ" }
+
+
+------------Server interface:------------------
+1. Price
+url: /price.json
+http method: GET
+Input paramter: NA
+Return result in JWS format, signed by server's private key:
+	calculated process in server:
+		1 payload_to_client= {'ContractAddress':'0xdeadbeef', 'Price':{"symbol": "EOS", "amount": "1"}, 'PublicKey':JWK_of_server_public, "ts", timestamp_in_seconds}
+		2 signed_by_server = JWS(timestamp_in_seconds_in_string, private_key_server)
+                3 result_to_client = JSON({ 
+           				"content": payload_to_client,
+		                        "ts_signature": signed_by_server}
+                                     })
+                4 return result_to_client as http response text to client
+
+2. Login:
+url: /cert.info
+http method: GET
+Parameter Name: code
+Paramter Value: A compact JWE string
+
+Input :  
+        The compact  JWE is encrypted by server's public key.
+        
+	calculated process in client:
+
+                1 kid_of_client_public_key = base58_encoding(SHA256(SHA256(public_key_client["n"]))
+                  An example of kid_of_client_public_key can be 'HareBAjopJi7GabM5HEX1VWsTHEmu8cFfAQFfSpbMsvT'
+                2 my_signature = JWS(string(current_time_stamp_in_seconds), private_key_client)
+		3 clear_payload_to_server = {"key":JWK(public_key_client), "signature": my_signature, "request":"ss_cert"}
+                4 encrypted_payload_server = JWE(clear_payload_to_server, public_key_server)
+		4 parameter to http: ?code=encrypted_payload_server
+
+        Calculated process in server:
+                0 Extract value from parameter code
+                1 Decrypt whole value by server's private key
+                  Decrypted result is a JSON string, server need to convert it into dictionary
+                  The converted dictionary is {"key":JWK_of_client, "signature":JWS_of_timestamp, "request":client_request}
+Example is following:
+b'{"key":{"kid":"HareBAjopJi7GabM5HEX1VWsTHEmu8cFfAQFfSpbMsvT","use":"enc","alg":"RSA-OAEP","enc":"A256CBC-HS512","e":"AQAB","kty":"RSA","n":"yfTdA3PJzyo2LT899lspEA8QESzDDMO-rRu7VtIKCSgBliCCI4etuVHU--2h3JXFHaNttfFTm2uA1ps1G86q90tvTol7MBqSZgD51dlBP_V5vDtdkmi_sS38Szfz_Qu6CS2-JxDmLdrBPJAXJjOW13Sz6e-cjT3TCsmV3n4zqyYbLSHOBdLpLAcH6JWtqsJE8bED68C5EZzfBtWoOXWtsNJgsGIQ2hugdh-VAm4lCPaSIOdQKGczfvSRFcsTMCKox9norysq3rfKqh0b_UBfcBDhFtFnVrCFGVtsbKV9OIf404J_QOpH8pjeyAVcocBN4TzJilrOfiDlcSvaztkaEQ"},
+"signature":"{\\"header\\":{},\\"payload\\":\\"eyJraWQiOiJIYXJlQkFqb3BKaTdHYWJNNUhFWDFWV3NUSEVtdThjRmZBUUZmU3BiTXN2VCIsInRzIjoxNTM4NDgyMjg1MjE4fQ\\",\\"signature\\":\\"bkqyRp8RDdZQ2pAZlNM1kk6jf7x4rsPaRAgtevSg0tx_kEo5vLlpjAV4gkK4nBfGHYhDdcUOoVtwnNlMj8sQlRmYczH4LUlBeSj3vkyZzPrxncgXOyDBg0sDvHGRornCghvMsFm9Ovfjhzp6P6BUWchyN17D_X_VDU6pP1hZteTm_Wuc_waoKL7yzE5UxpCbk7PgBCq2W6_ceo57VBAA_c2X0KBujlB2Tsq0EGg2jHZ-2fCibS3uTVcDFROOzpfe4TPVuhPK9rZwCvRBedM9UifjKVxTCadn8q4L_WdrxpKY4Uzh3nveI8DdrymVtkr9RsCgvlgJjFIQ8R7DM3edXg\\",\\"protected\\":\\"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IktBV0pCNDVmZGRiYlUyQU03eWctelVUeTJNeGZ3dFpILTA4LTBuTVJqdU0ifQ\\"}",
+"request":"ss_cert"}'
+
+                2 JWK_of_client is a standard JWK format of client key, it is a dictionary
+Example is following:
+			{"kid":"HareBAjopJi7GabM5HEX1VWsTHEmu8cFfAQFfSpbMsvT","use":"enc","alg":"RSA-OAEP","enc":"A256CBC-HS512","e":"AQAB","kty":"RSA","n":"yfTdA3PJzyo2LT899lspEA8QESzDDMO-rRu7VtIKCSgBliCCI4etuVHU--2h3JXFHaNttfFTm2uA1ps1G86q90tvTol7MBqSZgD51dlBP_V5vDtdkmi_sS38Szfz_Qu6CS2-JxDmLdrBPJAXJjOW13Sz6e-cjT3TCsmV3n4zqyYbLSHOBdLpLAcH6JWtqsJE8bED68C5EZzfBtWoOXWtsNJgsGIQ2hugdh-VAm4lCPaSIOdQKGczfvSRFcsTMCKox9norysq3rfKqh0b_UBfcBDhFtFnVrCFGVtsbKV9OIf404J_QOpH8pjeyAVcocBN4TzJilrOfiDlcSvaztkaEQ"}
+
+                3 JWS_of_timestamp is a standard JSON web for signature in Dictionary
+Example is following:
+		"{\\"header\\":{},\\"payload\\":\\"eyJraWQiOiJIYXJlQkFqb3BKaTdHYWJNNUhFWDFWV3NUSEVtdThjRmZBUUZmU3BiTXN2VCIsInRzIjoxNTM4NDgyMjg1MjE4fQ\\",\\"signature\\":\\"bkqyRp8RDdZQ2pAZlNM1kk6jf7x4rsPaRAgtevSg0tx_kEo5vLlpjAV4gkK4nBfGHYhDdcUOoVtwnNlMj8sQlRmYczH4LUlBeSj3vkyZzPrxncgXOyDBg0sDvHGRornCghvMsFm9Ovfjhzp6P6BUWchyN17D_X_VDU6pP1hZteTm_Wuc_waoKL7yzE5UxpCbk7PgBCq2W6_ceo57VBAA_c2X0KBujlB2Tsq0EGg2jHZ-2fCibS3uTVcDFROOzpfe4TPVuhPK9rZwCvRBedM9UifjKVxTCadn8q4L_WdrxpKY4Uzh3nveI8DdrymVtkr9RsCgvlgJjFIQ8R7DM3edXg\\",\\"protected\\":\\"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IktBV0pCNDVmZGRiYlUyQU03eWctelVUeTJNeGZ3dFpILTA4LTBuTVJqdU0ifQ\\"}"
+
+                4 request of client is a string, "ss_cert" is only supported now
+
+                5 server need to extract client's public key and verify the JWS_of_timestamp. 
+			If signature is valid, get payload, the payload is a string, it can be converted to integer as client's timestamp
+			1538482285218
+
+                6 server need to calculate the difference between local timestamp in seconds between client's timestamp in seconds
+                7 server also need to do an address matching process
+                  7.1 hash public key n part with sha256, get a number result A,
+                  7.2 hash A with sha256, get a number B
+                  7.3 encode B with base58 method, get a string C.
+                  7.4 assert C equal the kid in JWK.
+
+
+       
+
+Return result:
+	A JWE packet encrypted by client's public key, Key encryption algo is RSA-OAEP, content encryption algo can be define by server, include A256GCM, or other.
+         Encrypted payload is a JWS format data, signed by server's private key
+         The payload of JWS is server's service information to client
+
+	calculated process in server:
+		1 service_list = [{"type":"s", "address":"1.1.1.1", "port":"13345", "key":"key134555", "method":"hello"},{"type":"d", "address":"1.1.1.1", "port":"13345", "key":"key134555", "method":"world"}]
+		2 signed_payload = JWS(ts_server, server_private_key)
+
+		3 response_of_server_signed = {"ss_cert": ss_cert_list, "ts": ts_server, "signature_str_ts": signed_payload})
+		4 response_http = JWE(response_of_server_signed, public_key_client)
+
+
+ 
+
+return 400 if any error or login process failed
+
+
+
+---------------Browser wallet extension interface----------------
+
+1. PayTokenToContract for client
+   Input parameter: Contract address, token amount, Base64_URL_Safe_Encoding(SHA256(SHA256(public key of client)))
+   Return Error if eos node is not reachable
+
+2. Fetch my encrypted cert from URL
+3. Decrypt cert based on public key
+4. Download cert to local service
+
+---------------PC local service interface---------------
+Install service information
+URL: 127.0.0.1:23345/install
+http method: POST
+Input parameter: data in json {'ip':'10.10.10.10', 'port':'23456', 'key':'helloworld'}
+Return 200:
+
+
+
+
+
+
+
+rsa key example
+
+Pem format
+>>> pub_pem
+b'-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnxuARX905/3pDATluPJB\n5NMalvPgqc9FImgDQXZ3scpWiumVYC2disk2qSlnH8ZgBnTXvkQUyNKxfmMum9qk\ngHJXwKtxVoKdIVrQPy3hiC9U0tFGSvgGNeFp5qaEsm5SK8R7Y2kWWz4VEl9n0TTd\nmO+0D1P4co+hlk0eo4JLU95aJxpwuNafDoZDm4MZM04D4kh3ZxC/mXklT8WRQ8E+\nbOnkOYCfqQiniLXIHQvV7eSVgHYokhcnhK9GYaOe73gNwEdXuBQAabZsvBAasaWa\nPMrkfGOef9RFPt6wHDpgmpJBgSJRuAI19f7hAlJI5DeUT0TwzgU6xVfOC08sQlYV\njQIDAQAB\n-----END PUBLIC KEY-----\n'
+
+>>> priv_pem
+b'-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCfG4BFf3Tn/ekM\nBOW48kHk0xqW8+Cpz0UiaANBdnexylaK6ZVgLZ2KyTapKWcfxmAGdNe+RBTI0rF+\nYy6b2qSAclfAq3FWgp0hWtA/LeGIL1TS0UZK+AY14WnmpoSyblIrxHtjaRZbPhUS\nX2fRNN2Y77QPU/hyj6GWTR6jgktT3lonGnC41p8OhkObgxkzTgPiSHdnEL+ZeSVP\nxZFDwT5s6eQ5gJ+pCKeItcgdC9Xt5JWAdiiSFyeEr0Zho57veA3AR1e4FABptmy8\nEBqxpZo8yuR8Y55/1EU+3rAcOmCakkGBIlG4AjX1/uECUkjkN5RPRPDOBTrFV84L\nTyxCVhWNAgMBAAECggEAXEk6TJVSPOHU0+jfSjgSKmScDqSkUjpr8jn8cXMCmDgx\nnF9CCkhLEd4F+3aNXyvUNMp+/NhGaflzhEiJF1NpiStJZPLMSY53D4q6MXsuTqyN\neb5zFDbqe0QlBejeHRTKSqKrowyoMAJBfKej8v/D7NpUSXO+LszKwAA5XkPL53eu\nAIIOQuRZeCEywo6N/eCqZqzLmH9zsG5q5GMtIRNVndEarJvVWJAqPX2M5Hm4dxaq\nom+/dmFELeegA0jC2FAJXYIKZKFG7zByS3tafSE/NUz22PD6ZdhxtdD2rGVD6Jph\nKDfHK8bop3ctP2U43To/iIg9swm181Pp/8C34O/OrQKBgQDPrEWgH95+96PYXl8x\nsF8xH3dflL5nwwaNCfN9c859XonVoK8MTamMXHvU5a09msiIuqbh1dC2mUpbrBv5\nN1+q4WXdeqoENkRvaps0F+WmoPRVFCaD7AIAQnUubiMo3Og9NtyuUkp5VSoKV+WR\n9e7dESVwST1EKk5kyFPm2yb/fwKBgQDEIgeAIjVR1Y4QFO7VHdRf9+/++4zYRCAn\nuD8nOe0zQLDazbVTFG7kqm0hRgvy/H0yjYGgtUC7sSKRl3EEt00nSxGCRsOGFmWK\ndFLfEXAT4/NNXLlLDA3cEtcgya64+/oUHL2A8kmF8PeAzaEx8NsbJqlUW8IeKESG\nVj6EmHZw8wKBgEqEakdWqCOvAF+3HTlbLA0YWWE2okvhMwyQsYomb8WUkqjRC37C\nrz/qP5TZBRzB2YsWTqNicY3T21ahnzgBopZSYpbiWPdB8bR48E/08zajMokEvf1A\nRkeJkTqj0oHrIno0oWL7rDV1Vax4dau2L4urh1+PKCi5dX+8Uj7YDFpJAoGALZvc\nMqfBzm3iw0qa32Q4Zri5ToogjooJEDOAPBb0Wd7JQZhkehVeVD5tcjdfv/mHA6J0\nanK7wunGKCUXWwllH6YNREZAYYYDxtaWDtl3Pqjbgzn0vMbo0ixvamh8APhXhyXH\ny5yMDGGkrIck3QAtc3riFYPg+DJU/QhBMYRixpECgYBw09ujsKVQP0lY+9gcuH0A\nq6TnqB4dX8US7u5uTWwzMcQncMK8ZJSAyUZ4s9dKHPyw4sH9Z1qeGnKaHbiffnui\nnpa+8e9ddJnec2FrEKoQJVRnSa0DVfS1pKKTolGg6PqJlI1pNqCS1pdzQ7JzQq4U\nHfI8OYHc85XjbQECHztCCA==\n-----END PRIVATE KEY-----\n'
+
+JWK format
+private_jwk
+{"d":"XEk6TJVSPOHU0-jfSjgSKmScDqSkUjpr8jn8cXMCmDgxnF9CCkhLEd4F-3aNXyvUNMp-_NhGaflzhEiJF1NpiStJZPLMSY53D4q6MXsuTqyNeb5zFDbqe0QlBejeHRTKSqKrowyoMAJBfKej8v_D7NpUSXO-LszKwAA5XkPL53euAIIOQuRZeCEywo6N_eCqZqzLmH9zsG5q5GMtIRNVndEarJvVWJAqPX2M5Hm4dxaqom-_dmFELeegA0jC2FAJXYIKZKFG7zByS3tafSE_NUz22PD6ZdhxtdD2rGVD6JphKDfHK8bop3ctP2U43To_iIg9swm181Pp_8C34O_OrQ","dp":"SoRqR1aoI68AX7cdOVssDRhZYTaiS-EzDJCxiiZvxZSSqNELfsKvP-o_lNkFHMHZixZOo2JxjdPbVqGfOAGillJiluJY90HxtHjwT_TzNqMyiQS9_UBGR4mROqPSgesiejShYvusNXVVrHh1q7Yvi6uHX48oKLl1f7xSPtgMWkk","dq":"LZvcMqfBzm3iw0qa32Q4Zri5ToogjooJEDOAPBb0Wd7JQZhkehVeVD5tcjdfv_mHA6J0anK7wunGKCUXWwllH6YNREZAYYYDxtaWDtl3Pqjbgzn0vMbo0ixvamh8APhXhyXHy5yMDGGkrIck3QAtc3riFYPg-DJU_QhBMYRixpE","e":"AQAB","kty":"RSA","n":"nxuARX905_3pDATluPJB5NMalvPgqc9FImgDQXZ3scpWiumVYC2disk2qSlnH8ZgBnTXvkQUyNKxfmMum9qkgHJXwKtxVoKdIVrQPy3hiC9U0tFGSvgGNeFp5qaEsm5SK8R7Y2kWWz4VEl9n0TTdmO-0D1P4co-hlk0eo4JLU95aJxpwuNafDoZDm4MZM04D4kh3ZxC_mXklT8WRQ8E-bOnkOYCfqQiniLXIHQvV7eSVgHYokhcnhK9GYaOe73gNwEdXuBQAabZsvBAasaWaPMrkfGOef9RFPt6wHDpgmpJBgSJRuAI19f7hAlJI5DeUT0TwzgU6xVfOC08sQlYVjQ","p":"z6xFoB_efvej2F5fMbBfMR93X5S-Z8MGjQnzfXPOfV6J1aCvDE2pjFx71OWtPZrIiLqm4dXQtplKW6wb-TdfquFl3XqqBDZEb2qbNBflpqD0VRQmg-wCAEJ1Lm4jKNzoPTbcrlJKeVUqClflkfXu3RElcEk9RCpOZMhT5tsm_38","q":"xCIHgCI1UdWOEBTu1R3UX_fv_vuM2EQgJ7g_JzntM0Cw2s21UxRu5KptIUYL8vx9Mo2BoLVAu7EikZdxBLdNJ0sRgkbDhhZlinRS3xFwE-PzTVy5SwwN3BLXIMmuuPv6FBy9gPJJhfD3gM2hMfDbGyapVFvCHihEhlY-hJh2cPM","qi":"cNPbo7ClUD9JWPvYHLh9AKuk56geHV_FEu7ubk1sMzHEJ3DCvGSUgMlGeLPXShz8sOLB_Wdanhpymh24n357op6WvvHvXXSZ3nNhaxCqECVUZ0mtA1X0taSik6JRoOj6iZSNaTagktaXc0Oyc0KuFB3yPDmB3POV420BAh87Qgg"}'
+pub_jwk
+{"e":"AQAB","kty":"RSA","n":"nxuARX905_3pDATluPJB5NMalvPgqc9FImgDQXZ3scpWiumVYC2disk2qSlnH8ZgBnTXvkQUyNKxfmMum9qkgHJXwKtxVoKdIVrQPy3hiC9U0tFGSvgGNeFp5qaEsm5SK8R7Y2kWWz4VEl9n0TTdmO-0D1P4co-hlk0eo4JLU95aJxpwuNafDoZDm4MZM04D4kh3ZxC_mXklT8WRQ8E-bOnkOYCfqQiniLXIHQvV7eSVgHYokhcnhK9GYaOe73gNwEdXuBQAabZsvBAasaWaPMrkfGOef9RFPt6wHDpgmpJBgSJRuAI19f7hAlJI5DeUT0TwzgU6xVfOC08sQlYVjQ"}
+
+
