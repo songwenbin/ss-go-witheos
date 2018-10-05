@@ -39,7 +39,7 @@ func NewAccountManager() *AccountManager {
 func (am *AccountManager) Add(publickey string) {
 	am.Lock()
 	am.mapper[publickey] = &AccountInfo{
-		ip:      "localhost",
+		ip:      "172.105.233.93",
 		port:    RandomPort(),
 		key:     RandomPassword(),
 		methods: "aes_cbc_cfb_256",

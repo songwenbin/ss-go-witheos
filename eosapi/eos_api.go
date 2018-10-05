@@ -152,11 +152,11 @@ func GetContractMember(serverUrl string) []EosAccount {
 
 	var result []EosAccount
 	if tableRows != nil {
-		fmt.Println("tableRows: ", *tableRows)
-		fmt.Println("nb tableRows rows: ", len(tableRows.Rows))
+		//fmt.Println("tableRows: ", *tableRows)
+		//fmt.Println("nb tableRows rows: ", len(tableRows.Rows))
 
-		for i, v := range tableRows.Rows {
-			fmt.Println("==== ", i)
+		for _, v := range tableRows.Rows {
+			//fmt.Println("==== ", i)
 			/*
 				fmt.Println(v.Eospaid)
 				fmt.Println(v.Memo)

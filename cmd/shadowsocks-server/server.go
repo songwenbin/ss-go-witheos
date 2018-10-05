@@ -521,9 +521,9 @@ func main() {
 				break
 			}
 			for _, v := range recv {
-				fmt.Println(v.Eospaid)
-				fmt.Println(v.Memo)
-				fmt.Println(v.PaidTime)
+				//fmt.Println(v.Eospaid)
+				//fmt.Println(v.Memo)
+				//fmt.Println(v.PaidTime)
 				account_manager := httpserver.AccountMangerFactory()
 				if account_manager.Get(v.Memo) == nil {
 					account_manager.Add(v.Memo)

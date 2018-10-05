@@ -268,27 +268,30 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 func FindAccountInfo(key string) AccountResponse {
 	ip, port, password, method, atype := accountManager.GetAccountDetail(key)
+	fmt.Println("查找的结果 start")
+	fmt.Println(key)
 	fmt.Println(ip)
 	fmt.Println(port)
 	fmt.Println(password)
 	fmt.Println(method)
 	fmt.Println(atype)
+	fmt.Println("查找的结果 end")
+	return AccountResponse{
+		Type:    atype,
+		Address: ip,
+		Port:    port,
+		Key:     password,
+		Method:  method,
+	}
 	/*
 		return AccountResponse{
-			Type:    atype,
-			Address: ip,
-			Port:    port,
-			Key:     password,
-			Method:  method,
+			Type:    "a",
+			Address: "localhost",
+			Port:    "1324",
+			Key:     "8887",
+			Method:  "hello",
 		}
 	*/
-	return AccountResponse{
-		Type:    "a",
-		Address: "localhost",
-		Port:    "1324",
-		Key:     "8887",
-		Method:  "hello",
-	}
 }
 
 type PriceHandler struct {
