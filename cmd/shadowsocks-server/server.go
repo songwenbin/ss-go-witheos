@@ -19,7 +19,7 @@ import (
 	"syscall"
 	"time"
 
-	ss "github.com/shadowsocks/shadowsocks-go/shadowsocks"
+	ss "github.com/ss-go-witheos/shadowsocks"
 
 	"github.com/ss-go-witheos/eosapi"
 	"github.com/ss-go-witheos/httpserver"
