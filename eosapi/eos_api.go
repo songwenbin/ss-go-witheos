@@ -150,28 +150,28 @@ func GetContractMember(serverUrl string) []EosAccount {
 
 	fmt.Println("err: ", err)
 
+	var result []EosAccount
 	if tableRows != nil {
 		fmt.Println("tableRows: ", *tableRows)
 		fmt.Println("nb tableRows rows: ", len(tableRows.Rows))
-	}
 
-	var result []EosAccount
-	for i, v := range tableRows.Rows {
-		fmt.Println("==== ", i)
-		/*
-			fmt.Println(v.Eospaid)
-			fmt.Println(v.Memo)
-			fmt.Println(v.Paid_time)
-			fmt.Println(v.Purchaser)
-		*/
+		for i, v := range tableRows.Rows {
+			fmt.Println("==== ", i)
+			/*
+				fmt.Println(v.Eospaid)
+				fmt.Println(v.Memo)
+				fmt.Println(v.Paid_time)
+				fmt.Println(v.Purchaser)
+			*/
 
-		result = append(result, EosAccount{
-			Purchaser: v.Purchaser,
-			Eospaid:   v.Eospaid,
-			PaidTime:  v.Paid_time,
-			Memo:      v.Memo,
-		})
+			result = append(result, EosAccount{
+				Purchaser: v.Purchaser,
+				Eospaid:   v.Eospaid,
+				PaidTime:  v.Paid_time,
+				Memo:      v.Memo,
+			})
 
+		}
 	}
 
 	return result
