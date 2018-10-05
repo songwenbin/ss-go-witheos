@@ -471,11 +471,11 @@ func main() {
 		ss.UpdateConfig(config, &cmdConfig)
 	}
 
-	//fmt.Println(config.Contract.Address)
-	//fmt.Println(config.Contract.Url)
-	//fmt.Println(config.Contract.Scope)
-	//fmt.Println(config.Contract.Code)
-	//fmt.Println(config.Contract.Table)
+	fmt.Println(config.Contract.Address)
+	fmt.Println(config.Contract.Url)
+	fmt.Println(config.Contract.Scope)
+	fmt.Println(config.Contract.Code)
+	fmt.Println(config.Contract.Table)
 	if config.Method == "" {
 		config.Method = "aes-256-cfb"
 	}

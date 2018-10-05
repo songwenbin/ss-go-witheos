@@ -11,10 +11,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+
 	// "log"
 	"os"
 	"reflect"
 	"time"
+
+	"github.com/ss-go-witheos/eosapi"
 )
 
 type Config struct {
@@ -33,7 +36,8 @@ type Config struct {
 
 	// The order of servers in the client config is significant, so use array
 	// instead of map to preserve the order.
-	ServerPassword [][]string `json:"server_password"`
+	ServerPassword [][]string       `json:"server_password"`
+	Contract       eosapi.EosConfig `json:"contract"`
 }
 
 var readTimeout time.Duration
