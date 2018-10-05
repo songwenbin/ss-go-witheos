@@ -470,6 +470,12 @@ func main() {
 	} else {
 		ss.UpdateConfig(config, &cmdConfig)
 	}
+
+	//fmt.Println(config.Contract.Address)
+	//fmt.Println(config.Contract.Url)
+	//fmt.Println(config.Contract.Scope)
+	//fmt.Println(config.Contract.Code)
+	//fmt.Println(config.Contract.Table)
 	if config.Method == "" {
 		config.Method = "aes-256-cfb"
 	}
@@ -506,6 +512,8 @@ func main() {
 		go managerDaemon(conn)
 	}
 
+	//Todo 判断是否有eos的账户落地文件, 如果有加载到AccountManager
+
 	go func(t chan []eosapi.EosAccount) {
 		for {
 			recv, ok := <-t
@@ -521,6 +529,7 @@ func main() {
 					account_manager.Add(v.Memo)
 					port, password := account_manager.GetPortAndPassword(v.Memo)
 					if port != "" && password != "" {
+						// Todo文件落地
 						go run(port, password)
 					}
 				}
