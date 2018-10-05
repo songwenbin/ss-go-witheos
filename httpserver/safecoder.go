@@ -43,18 +43,32 @@ func (se *SafeEncrypt) SetPublicKey(jsonformat string) {
 	se.PublicKey = publicKey.Key.(*rsa.PublicKey)
 }
 
+func (se *SafeEncrypt) SetKey(jsonWebPubKey string, jsonWebPriKey string) {
+	privateKey := jose.JSONWebKey{}
+	if err := privateKey.UnmarshalJSON([]byte(jsonWebPriKey)); err != nil {
+		fmt.Print("@@@@@@@@@@@@@@@@@@@@@")
+		fmt.Println(err.Error())
+	}
+	se.PrivateKey = privateKey.Key.(*rsa.PrivateKey)
+
+	publicKey := jose.JSONWebKey{}
+	if err := publicKey.UnmarshalJSON([]byte(jsonWebPubKey)); err != nil {
+		fmt.Print("@@@@@@@@@@@@@@@@@@@@@")
+		fmt.Println(err.Error())
+	}
+	se.PublicKey = publicKey.Key.(*rsa.PublicKey)
+}
+
 func (se *SafeEncrypt) GetPrivateKey() string {
 	kid := base64.StdEncoding.EncodeToString([]byte("serverid"))
-	//priv := jose.JSONWebKey{Key: se.PrivateKey, KeyID: kid, Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
-	priv := jose.JSONWebKey{Key: se.PrivateKey, KeyID: kid, Algorithm: string(jose.RSA_OAEP), Use: "enc"}
+	priv := jose.JSONWebKey{Key: se.PrivateKey, KeyID: kid, Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
 	privJS, _ := priv.MarshalJSON()
 	return string(privJS)
 }
 
 func (se *SafeEncrypt) GetPublicKey() string {
 	kid := base64.StdEncoding.EncodeToString([]byte("serverid"))
-	//pub := jose.JSONWebKey{Key: se.PublicKey, KeyID: kid, Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
-	pub := jose.JSONWebKey{Key: se.PublicKey, KeyID: kid, Algorithm: string(jose.RSA_OAEP), Use: "enc"}
+	pub := jose.JSONWebKey{Key: se.PublicKey, KeyID: kid, Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
 	pubJS, _ := pub.MarshalJSON()
 	return string(pubJS)
 }
@@ -79,7 +93,7 @@ func JWE_Encrypt(se *SafeEncrypt, content string) string {
 	//encrypter, err := b.NewEncrypter(b.A256CBC_HS512, b.Recipient{Algorithm: b.RSA_OAEP, Key: se.PublicKey}, nil)
 	opt := b.EncrypterOptions{}
 	opt.WithType("JWE")
-	encrypter, err := b.NewEncrypter(b.A256GCM, b.Recipient{Algorithm: b.RSA_OAEP, Key: se.PublicKey}, &opt)
+	encrypter, err := b.NewEncrypter(b.A256GCM, b.Recipient{Algorithm: b.RSA_OAEP_256, Key: se.PublicKey}, &opt)
 
 	if err != nil {
 		fmt.Println(err)
@@ -163,8 +177,8 @@ func GenerateEncKey() (string, string) {
 		kid := base32.StdEncoding.EncodeToString(b)
 	*/
 	kid := base64.StdEncoding.EncodeToString([]byte("serverid"))
-	priv := jose.JSONWebKey{Key: privKey, KeyID: kid, Algorithm: string(jose.RSA_OAEP), Use: "enc"}
-	pub := jose.JSONWebKey{Key: pubKey, KeyID: kid, Algorithm: string(jose.RSA_OAEP), Use: "enc"}
+	priv := jose.JSONWebKey{Key: privKey, KeyID: kid, Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
+	pub := jose.JSONWebKey{Key: pubKey, KeyID: kid, Algorithm: string(jose.RSA_OAEP_256), Use: "enc"}
 	if priv.IsPublic() || !pub.IsPublic() || !priv.Valid() || !pub.Valid() {
 		//app.Fatalf("invalid keys were generated")
 	}

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/ss-go-witheos/eosapi"
 )
 
 type PublicKey struct {
@@ -71,7 +73,8 @@ func init() {
 	se.SetPublicKey(pub)
 }
 
-func ResultToClientForPrice() string {
+func ResultToClientForPrice(contract string) string {
+	// 签名
 	current := time.Now().Unix()
 	current_str := strconv.FormatInt(current, 10)
 	signed, _ := JWS_Sign(se, current_str)
@@ -89,7 +92,7 @@ func ResultToClientForPrice() string {
 	}
 
 	payload := PricePayload{
-		ContractAddress: "0xdeadbeef",
+		ContractAddress: contract,
 		Price:           1,
 		PublicKey:       pubkey,
 		Ts:              current,
@@ -179,6 +182,7 @@ func saveClientKey(key PublicKeyForLogin) *SafeEncrypt {
 	return &client
 }
 
+/*
 func handlePrice(w http.ResponseWriter, r *http.Request) {
 	// 解决跨域的参数
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -191,6 +195,7 @@ func handlePrice(w http.ResponseWriter, r *http.Request) {
 	response := ResultToClientForPrice()
 	fmt.Fprintf(w, response)
 }
+*/
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
 	// 解决跨域的参数
@@ -286,12 +291,32 @@ func FindAccountInfo(key string) AccountResponse {
 	}
 }
 
-func HttpServer() {
+type PriceHandler struct {
+	config eosapi.EosConfig
+}
+
+func (h *PriceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// 解决跨域的参数
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("content-type", "application/json")
+
+	port, password := accountManager.GetPortAndPassword("ok")
+	fmt.Println(port)
+	fmt.Println(password)
+	response := ResultToClientForPrice(h.config.Address)
+	fmt.Fprintf(w, response)
+}
+
+func HttpServer(config eosapi.EosConfig) {
 	// Todo 服务器的启动地址需要参数进行传入
 	server := http.Server{
 		Addr: "localhost:8887",
 	}
-	http.HandleFunc("/price.json", handlePrice)
+
+	priceHandler := PriceHandler{}
+	priceHandler.config = config
+	http.Handle("/price.json", &priceHandler)
 	http.HandleFunc("/cert.info", handleLogin)
 
 	server.ListenAndServe()
