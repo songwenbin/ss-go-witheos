@@ -42,7 +42,7 @@ func (am *AccountManager) Add(publickey string) {
 		ip:      "172.105.233.93",
 		port:    RandomPort(),
 		key:     RandomPassword(),
-		methods: "aes_cbc_cfb_256",
+		methods: "aes-128-cfb",
 	}
 	am.Unlock()
 }
