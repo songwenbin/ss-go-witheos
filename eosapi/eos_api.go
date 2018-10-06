@@ -148,7 +148,9 @@ func ChainGetTableRows(scope string, code string, table string, toJSON bool, low
 func GetContractMember(serverUrl string) []EosAccount {
 	tableRows, err := ChainGetTableRows("incomering1", "incomering1", "purchase", true, -1, -1, -1)
 
-	fmt.Println("err: ", err)
+	if err != nil {
+		fmt.Println("err: ", err)
+	}
 
 	var result []EosAccount
 	if tableRows != nil {

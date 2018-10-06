@@ -40,9 +40,14 @@ type PriceResponse struct {
 
 type PricePayload struct {
 	ContractAddress string    `json:"ContractAddress"`
-	Price           int       `json:"Price"`
+	Price           Price     `json:"Price"`
 	PublicKey       PublicKey `json:"PublicKey"`
 	Ts              int64     `json:"ts"`
+}
+
+type Price struct {
+	Symbol string `json:"symbol"`
+	Amount int    `json:"amount"`
 }
 
 type LoginPayload struct {
@@ -93,9 +98,12 @@ func ResultToClientForPrice(contract string) string {
 
 	payload := PricePayload{
 		ContractAddress: contract,
-		Price:           1,
-		PublicKey:       pubkey,
-		Ts:              current,
+		Price: Price{
+			Symbol: "EOS",
+			Amount: 1,
+		},
+		PublicKey: pubkey,
+		Ts:        current,
 	}
 
 	response := &PriceResponse{
