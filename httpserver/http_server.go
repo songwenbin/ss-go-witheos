@@ -82,6 +82,7 @@ func ResultToClientForPrice(contract string) string {
 	// 签名
 	current := time.Now().Unix()
 	current_str := strconv.FormatInt(current, 10)
+	fmt.Println(current_str)
 	signed, _ := JWS_Sign(se, current_str)
 
 	var sign TsSignature
@@ -128,7 +129,8 @@ func ResponseForLogin(client *SafeEncrypt, server *SafeEncrypt, account AccountR
 
 	// 2 signed_payload = JWS(ts_server, server_private_key)
 	ts := time.Now().Unix()
-	signed, err := JWS_Sign(se, string(ts))
+	current_str := strconv.FormatInt(ts, 10)
+	signed, err := JWS_Sign(se, current_str)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
