@@ -529,7 +529,7 @@ func main() {
 			}
 		}
 	}(t)
-	go eosapi.TimerPullEosContract(t)
+	go eosapi.TimerPullEosContract(config.Contract, t)
 	go httpserver.HttpServer(config.HttpConfig, config.Contract)
 
 	waitSignal()

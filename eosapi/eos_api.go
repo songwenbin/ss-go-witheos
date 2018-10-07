@@ -107,7 +107,7 @@ func Post(url string, keyValues map[string]interface{}, bytes []byte) ([]byte, *
 	return body, nil
 }
 
-func ChainGetTableRows(scope string, code string, table string, toJSON bool, lowerBound int, upperBound int, limit int) (*TableRows, *AppError) {
+func ChainGetTableRows(url string, scope string, code string, table string, toJSON bool, lowerBound int, upperBound int, limit int) (*TableRows, *AppError) {
 
 	_toJSON := "false"
 
@@ -145,8 +145,8 @@ func ChainGetTableRows(scope string, code string, table string, toJSON bool, low
 	return &tableRows, nil
 }
 
-func GetContractMember(serverUrl string) []EosAccount {
-	tableRows, err := ChainGetTableRows("incomering1", "incomering1", "purchase", true, -1, -1, -1)
+func GetContractMember(serverUrl string, scope string, code string, table string) []EosAccount {
+	tableRows, err := ChainGetTableRows(serverUrl, scope, code, table, true, -1, -1, -1)
 
 	if err != nil {
 		fmt.Println("err: ", err)
@@ -179,11 +179,11 @@ func GetContractMember(serverUrl string) []EosAccount {
 	return result
 }
 
-func TimerPullEosContract(eosAccountChan chan<- []EosAccount) {
+func TimerPullEosContract(eosConfig EosConfig, eosAccountChan chan<- []EosAccount) {
 	for {
 		select {
 		case <-time.After(5 * time.Second):
-			eosAccountChan <- GetContractMember("")
+			eosAccountChan <- GetContractMember(eosConfig.Address, eosConfig.Scope, eosConfig.Code, eosConfig.Table)
 		}
 	}
 }
