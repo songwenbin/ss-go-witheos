@@ -262,9 +262,6 @@ func (h *PriceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("content-type", "application/json")
 
-	port, password := accountManager.GetPortAndPassword("ok")
-	fmt.Println(port)
-	fmt.Println(password)
 	response := ResultToClientForPrice(h.config.Address)
 	fmt.Fprintf(w, response)
 }
@@ -282,10 +279,16 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	inputJson := decryptInputParamForLogin(se, input)
 	fmt.Println("请求的解密数据:", inputJson)
+	if inputJson == "" {
+		http.Error(w, "解密数据失败", http.StatusBadRequest)
+		return
+	}
 
 	var payload LoginPayload
 	if err := json.Unmarshal([]byte(inputJson), &payload); err != nil {
 		fmt.Println("解密数据无法序列化为json")
+		http.Error(w, "解密数据无法序列化为json", http.StatusBadRequest)
+		return
 	}
 
 	client := saveClientKey(payload.Key)
@@ -304,11 +307,18 @@ func (h *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	tsDiff := currentTs - clientTimeStamp
 	if tsDiff >= 60 && tsDiff < 0 {
 		fmt.Println("客户端时间戳校验失败")
+		http.Error(w, "客户端时间戳校验失败", http.StatusBadRequest)
+		return
 	}
 
 	memo := Base58Encoder(SHA256(string(SHA256(payload.Key.N))))
 	fmt.Println("用户的key是:", memo)
 	account := FindAccountInfo(memo)
+	if account.Address == "" {
+		fmt.Println("账户信息没有找到")
+		http.Error(w, "账户信息没有找到", http.StatusBadRequest)
+		return
+	}
 	resp := responseForLogin(client, se, account)
 	fmt.Fprintf(w, resp)
 }
