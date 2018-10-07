@@ -12,5 +12,9 @@
         "scope":"incomering1",
         "code":"incomering1",
         "table":"purchase"
+    },
+    "http_config": {
+        "ip":"172.105.233.93",
+        "port":"8887"
     }
 }

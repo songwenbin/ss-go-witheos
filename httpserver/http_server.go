@@ -321,10 +321,10 @@ func (h *PriceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, response)
 }
 
-func HttpServer(config eosapi.EosConfig) {
+func HttpServer(httpConfig HttpConfig, config eosapi.EosConfig) {
 	// Todo 服务器的启动地址需要参数进行传入
 	server := http.Server{
-		Addr: "localhost:8887",
+		Addr: httpConfig.Ip + ":" + httpConfig.Port,
 	}
 
 	priceHandler := PriceHandler{}
