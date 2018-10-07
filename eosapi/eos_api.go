@@ -179,7 +179,7 @@ func GetContractMember(serverUrl string) []EosAccount {
 	return result
 }
 
-func PullEosContract(eosAccountChan chan<- []EosAccount) {
+func TimerPullEosContract(eosAccountChan chan<- []EosAccount) {
 	for {
 		select {
 		case <-time.After(5 * time.Second):

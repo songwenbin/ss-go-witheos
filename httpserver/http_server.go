@@ -322,7 +322,6 @@ func (h *PriceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func HttpServer(httpConfig HttpConfig, config eosapi.EosConfig) {
-	// Todo 服务器的启动地址需要参数进行传入
 	server := http.Server{
 		Addr: httpConfig.Ip + ":" + httpConfig.Port,
 	}

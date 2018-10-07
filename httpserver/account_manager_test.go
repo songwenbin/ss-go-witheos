@@ -16,3 +16,12 @@ func TestRand(t *testing.T) {
 		t.Error("erro")
 	}
 }
+
+func TestPassword(t *testing.T) {
+	fmt.Println(GeneratePassword())
+	fmt.Println(GeneratePassword())
+	fmt.Println(GeneratePassword())
+	fmt.Println(GeneratePassword())
+	fmt.Println(GeneratePassword())
+	t.Error("erro")
+}

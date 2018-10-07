@@ -23,7 +23,7 @@ type AccountInfo struct {
 var accountManager *AccountManager = NewAccountManager()
 
 func init() {
-	accountManager.Add("ok")
+	//accountManager.Add("ok")
 }
 
 func AccountMangerFactory() *AccountManager {
@@ -36,13 +36,13 @@ func NewAccountManager() *AccountManager {
 	}
 }
 
-func (am *AccountManager) Add(publickey string) {
+func (am *AccountManager) Add(publickey string, ip string, method string) {
 	am.Lock()
 	am.mapper[publickey] = &AccountInfo{
-		ip:      "172.105.233.93",
+		ip:      ip,
 		port:    RandomPort(),
-		key:     RandomPassword(),
-		methods: "aes-128-cfb",
+		key:     GeneratePassword(),
+		methods: method,
 	}
 	am.Unlock()
 }
@@ -89,6 +89,11 @@ func RandomPort() string {
 	return s
 }
 
-func RandomPassword() string {
-	return "foobar"
+func GeneratePassword() string {
+	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	b := make([]byte, 20)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }

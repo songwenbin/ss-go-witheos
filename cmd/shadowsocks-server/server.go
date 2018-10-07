@@ -510,18 +510,16 @@ func main() {
 	//Todo 判断是否有eos的账户落地文件, 如果有加载到AccountManager
 
 	go func(t chan []eosapi.EosAccount) {
+		account_manager := httpserver.AccountMangerFactory()
 		for {
 			recv, ok := <-t
 			if !ok {
+				fmt.Println("The channel is closed")
 				break
 			}
 			for _, v := range recv {
-				//fmt.Println(v.Eospaid)
-				//fmt.Println(v.Memo)
-				//fmt.Println(v.PaidTime)
-				account_manager := httpserver.AccountMangerFactory()
 				if account_manager.Get(v.Memo) == nil {
-					account_manager.Add(v.Memo)
+					account_manager.Add(v.Memo, config.HttpConfig.Ip, config.Method)
 					port, password := account_manager.GetPortAndPassword(v.Memo)
 					if port != "" && password != "" {
 						// Todo文件落地
@@ -531,7 +529,7 @@ func main() {
 			}
 		}
 	}(t)
-	go eosapi.PullEosContract(t)
+	go eosapi.TimerPullEosContract(t)
 	go httpserver.HttpServer(config.HttpConfig, config.Contract)
 
 	waitSignal()
