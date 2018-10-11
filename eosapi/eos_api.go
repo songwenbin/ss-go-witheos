@@ -125,7 +125,7 @@ func ChainGetTableRows(url string, scope string, code string, table string, toJS
 		//"limit":       limit,
 	}
 
-	data, err := Post("http://ec2-54-95-158-74.ap-northeast-1.compute.amazonaws.com:8888/v1/chain/get_table_rows", params, nil)
+	data, err := Post(url+"/v1/chain/get_table_rows", params, nil)
 
 	if err != nil {
 		fmt.Println("=============")
@@ -159,12 +159,10 @@ func GetContractMember(serverUrl string, scope string, code string, table string
 
 		for _, v := range tableRows.Rows {
 			//fmt.Println("==== ", i)
-			/*
-				fmt.Println(v.Eospaid)
-				fmt.Println(v.Memo)
-				fmt.Println(v.Paid_time)
-				fmt.Println(v.Purchaser)
-			*/
+			//fmt.Println(v.Eospaid)
+			//fmt.Println(v.Memo)
+			//fmt.Println(v.Paid_time)
+			//				fmt.Println(v.Purchaser)
 
 			result = append(result, EosAccount{
 				Purchaser: v.Purchaser,
@@ -183,7 +181,7 @@ func TimerPullEosContract(eosConfig EosConfig, eosAccountChan chan<- []EosAccoun
 	for {
 		select {
 		case <-time.After(5 * time.Second):
-			eosAccountChan <- GetContractMember(eosConfig.Address, eosConfig.Scope, eosConfig.Code, eosConfig.Table)
+			eosAccountChan <- GetContractMember(eosConfig.Url, eosConfig.Scope, eosConfig.Code, eosConfig.Table)
 		}
 	}
 }
