@@ -100,7 +100,7 @@ func ResultToClientForPrice(contract string) string {
 	payload := PricePayload{
 		ContractAddress: contract,
 		Price: Price{
-			Symbol: "EOS",
+			Symbol: "SYS",
 			Amount: 1,
 		},
 		PublicKey: pubkey,
